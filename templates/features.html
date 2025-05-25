@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Cinovates - Features{% endblock %}
+
+{% block content %}
+<main class="features-container">
+    <h1>MedScript Features</h1>
+    <div class="feature-boxes">
+        <section class="feature-box" aria-labelledby="ai-ocr-heading">
+            <img src="{{ url_for('static', filename='ai-icon.png') }}" alt="AI Icon">
+            <h2 id="ai-ocr-heading">AI-Powered OCR</h2>
+            <p>Extracts text from handwritten with Multiligual support and printed prescriptions with high accuracy.</p>
+        </section>
+        <section class="feature-box" aria-labelledby="security-heading">
+            <img src="{{ url_for('static', filename='security-icon.png') }}" alt="Security Icon">
+            <h2 id="security-heading">Secure & Encrypted</h2>
+            <p>Ensures data privacy with end-to-end encryption and HIPAA compliance.</p>
+        </section>
+        <section class="feature-box" aria-labelledby="cloud-heading">
+            <img src="{{ url_for('static', filename='cloud-icon.png') }}" alt="Cloud Icon">
+            <h2 id="cloud-heading">Cloud Integration</h2>
+            <p>Sync prescriptions seamlessly across devices with cloud storage.</p>
+        </section>
+        <section class="feature-box" aria-labelledby="format-heading">
+            <img src="{{ url_for('static', filename='format-icon.png') }}" alt="Format Icon">
+            <h2 id="format-heading">Multi-Format Support</h2>
+            <p>Upload prescriptions in JPG, PNG, and PDF formats with ease.</p>
+        </section>
+        <section class="feature-box" aria-labelledby="health-assistant-heading">
+            <img src="{{ url_for('static', filename='doctorlogo.png') }}" alt="AI Health Assistant Icon">
+            <h2 id="health-assistant-heading">AI-Powered Health Assistant</h2>
+            <p>Analyzes doctor prescriptions and provides medical suggestions.</p>
+        </section>
+        <section class="feature-box" aria-labelledby="health-assistant-heading">
+            <img src="{{ url_for('static', filename='medicne-logo.png') }}" alt="AI Health Assistant Icon">
+            <h2 id="health-assistant-heading">Medicine Scraper</h2>
+            <p>Analyzes medical websites and provides medical suggestions.</p>
+        </section>
+    </div>
+</main>
+{% endblock %}
