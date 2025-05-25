@@ -1,7 +1,5 @@
 # Clinnovators
 
-# MedScript
-
 MedScript is an AI-powered healthcare platform that digitizes medical prescriptions, predicts diseases from symptoms, compares medicine prices, and provides a smart medical chatbot for instant health advice.
 
 ## Features
