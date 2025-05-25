@@ -17,8 +17,6 @@ pdf2image
 textblob
 aiohttp
 scikit-learn
-smtplib
-email
 gunicorn
 Werkzeug
 itsdangerous
