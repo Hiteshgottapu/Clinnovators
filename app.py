@@ -1941,12 +1941,3 @@ def check_session():
 # ================== Run the App ==================
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
-
-# --- Utility: Generate requirements.txt from current environment ---
-@app.route("/generate-requirements")
-def generate_requirements():
-    import subprocess
-    reqs = subprocess.check_output([os.sys.executable, "-m", "pip", "freeze"]).decode()
-    with open("requirements.txt", "w") as f:
-        f.write(reqs)
-    return "requirements.txt generated."
