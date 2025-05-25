@@ -1,0 +1,29 @@
+aiohttp
+bs4
+cryptography
+firebase-admin
+Flask
+Flask-Session
+fuzzywuzzy
+numpy
+openai
+pandas
+pdf2image
+Pillow
+PyJWT
+python-dotenv
+python-Levenshtein
+python-multipart
+reportlab
+requests
+scikit-learn
+textblob
+# Additional packages for your imports:
+flask
+python-dotenv
+pillow
+requests
+# For email and SMTP
+secure-smtplib
+# For logging (standard library, no need to add)
+# For io, os (standard library, no need to add)

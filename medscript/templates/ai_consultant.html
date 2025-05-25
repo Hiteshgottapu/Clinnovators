@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+{% block title %}AI Consultant{% endblock %}
+
+{% block content %}
+<div class="hero" style="margin-bottom: 30px;">
+    <h1>Med Script's <span>AI</span> Consultant</h1>
+    <p>Our AI Consultant intelligently analyzes symptoms to predict potential diseases and provide personalized health recommendations. With insights on medications, precautions, diets, and workouts, it empowers users with data-driven healthcare guidance.</p>
+</div>
+<div class="main-container fade-in" style="gap: 40px;">
+    <div class="form-container shadow-box slide-in" style="background: #f8fbff; border: 1px solid #e3eaf5; border-radius: 18px; box-shadow: 0 6px 24px rgba(64,152,215,0.08);">
+        <h2 style="text-align: center; color: #4098d7; margin-bottom: 24px;">Enter Your Details</h2>
+        <form action="/predict" method="post">
+            <div class="form-group">
+                <label for="name"><i class="fas fa-user"></i> Name:</label>
+                <input type="text" class="form-control custom-input" id="name" name="name" placeholder="Enter your name" required>
+            </div>
+            <div class="form-group">
+                <label for="age"><i class="fas fa-birthday-cake"></i> Age:</label>
+                <input type="number" class="form-control custom-input" id="age" name="age" placeholder="Enter your age" required>
+            </div>
+            <div class="form-group">
+                <label for="location"><i class="fas fa-map-marker-alt"></i> Location:</label>
+                <input type="text" class="form-control custom-input" id="location" name="location" placeholder="Enter your location" required>
+            </div>
+            <div class="form-group">
+                <label for="symptoms"><i class="fas fa-stethoscope"></i> Symptoms:</label>
+                <div class="input-group">
+                    <input type="text" class="form-control custom-input" id="symptoms" name="symptoms" placeholder="Type symptoms such as itching, sleeping, aching etc">
+                    <button type="button" id="startSpeechRecognition" class="mic-button" title="Speak symptoms">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                </div>
+            </div>
+            {% if message %}
+            <p style="color: #dc3545; text-align: center;">{{ message }}</p>
+            {% endif %}
+            <button type="submit" class="custom-button" style="background-color: #FF2052; width: 100%; margin-top: 18px;">Predict</button>
+        </form>
+    </div>
+    <div class="results-container shadow-box fade-in" style="border: none; background: #f8fbff; border-radius: 18px; box-shadow: 0 6px 24px rgba(64,152,215,0.08);">
+        {% if predictions %}
+            {% for pred in predictions %}
+            <div class="custom-card mt-4" style="border: none; background: #fff; border-radius: 16px; box-shadow: 0 4px 16px rgba(64,152,215,0.10); margin-bottom: 32px;">
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
+                    <div style="display: flex; gap: 18px; flex-wrap: wrap;">
+                        <span style="font-weight: 600; color: #4098d7;"><i class="fas fa-user"></i> {{ name }}</span>
+                        <span style="font-weight: 600; color: #4098d7;"><i class="fas fa-birthday-cake"></i> {{ age }}</span>
+                        <span style="font-weight: 600; color: #4098d7;"><i class="fas fa-map-marker-alt"></i> {{ location }}</span>
+                    </div>
+                    <span style="font-weight: 500; color: #555;"><i class="fas fa-stethoscope"></i> Symptoms: <span style="color: #222;">{{ symptoms }}</span></span>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <span style="font-size: 1.1em; font-weight: bold; color: #FF2052;"><i class="fas fa-diagnoses"></i> Predicted Disease: {{ pred.predicted_disease }}</span>
+                </div>
+                <div class="button-grid" style="grid-template-columns: repeat(1, 1fr); margin-top: 18px;">
+                    <div class="accordion-item">
+                        <button class="custom-button accordion-button" style="background: #e3f2fd; color: #4098d7;">
+                            <span><i class="fas fa-disease"></i> Disease</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="accordion-content" style="border: none;">
+                            <p style="margin: 0;">Predicted Disease: {{ pred.predicted_disease }}</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <button class="custom-button accordion-button" style="background: #e3f2fd; color: #4098d7;">
+                            <span><i class="fas fa-info-circle"></i> Description</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="accordion-content" style="border: none;">
+                            <p style="margin: 0;">{{ pred.dis_des }}</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <button class="custom-button accordion-button" style="background: #e3f2fd; color: #4098d7;">
+                            <span><i class="fas fa-shield-alt"></i> Precaution</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="accordion-content" style="border: none;">
+                            <ul style="margin: 0; padding-left: 18px;">
+                                {% for i in pred.my_precautions %}
+                                <li>{{ i }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <button class="custom-button accordion-button" style="background: #e3f2fd; color: #4098d7;">
+                            <span><i class="fas fa-pills"></i> Medications</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="accordion-content" style="border: none;">
+                            <ul style="margin: 0; padding-left: 18px;">
+                                {% for i in pred.medications %}
+                                <li>{{ i }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <button class="custom-button accordion-button" style="background: #e3f2fd; color: #4098d7;">
+                            <span><i class="fas fa-dumbbell"></i> Workouts</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="accordion-content" style="border: none;">
+                            <ul style="margin: 0; padding-left: 18px;">
+                                {% for i in pred.workout %}
+                                <li>{{ i }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <button class="custom-button accordion-button" style="background: #e3f2fd; color: #4098d7;">
+                            <span><i class="fas fa-apple-alt"></i> Diets</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="accordion-content" style="border: none;">
+                            <ul style="margin: 0; padding-left: 18px;">
+                                {% for i in pred.my_diet %}
+                                <li>{{ i }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% if predictions %}
+        <div style="display: flex; gap: 12px; justify-content: center; margin-top: 18px;">
+            <form action="/download_pdf" method="get" style="display: inline;">
+                <textarea name="text" style="display:none;">
+Name: {{ name }}
+Age: {{ age }}
+Location: {{ location }}
+Symptoms: {{ symptoms }}
+{% for pred in predictions %}
+Predicted Disease: {{ pred.predicted_disease }}
+Description: {{ pred.dis_des }}
+Precautions: 
+{% for i in pred.my_precautions %}
+- {{ i }}
+{% endfor %}
+Medications: 
+{% for i in pred.medications %}
+- {{ i }}
+{% endfor %}
+Workouts: 
+{% for i in pred.workout %}
+- {{ i }}
+{% endfor %}
+Diets: 
+{% for i in pred.my_diet %}
+- {{ i }}
+{% endfor %}
+---
+{% endfor %}
+                </textarea>
+                <button type="submit" class="custom-button" style="background-color: #28a745; width: auto;">Health Report Download</button>
+            </form>
+            <form action="/doctor_consultation" method="get" style="display: inline;">
+                <input type="hidden" name="name" value="{{ name }}">
+                <input type="hidden" name="age" value="{{ age }}">
+                <input type="hidden" name="email" value="{{ email }}">
+                <input type="hidden" name="symptoms" value="{{ symptoms }}">
+                <button type="submit" class="custom-button" style="background-color: #17a2b8; width: auto;">Doctor Consultation</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+<br>
+
+<!-- Modal Popup -->
+<div id="messageModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <p id="modalMessage" style="white-space: pre-line;"></p>
+    </div>
+</div>
+
+<script>
+    const startSpeechRecognitionButton = document.getElementById('startSpeechRecognition');
+    const symptomsInput = document.getElementById('symptoms');
+
+    startSpeechRecognitionButton.addEventListener('click', startSpeechRecognition);
+
+    function startSpeechRecognition() {
+        const recognition = new webkitSpeechRecognition(); // Use webkitSpeechRecognition for compatibility
+
+        recognition.lang = 'en-US'; // Set the language for recognition
+
+        recognition.onresult = function (event) {
+            const result = event.results[0][0].transcript;
+            symptomsInput.value = result; // Place the result in the symptoms input box
+        };
+
+        recognition.onend = function () {
+            console.log('Speech recognition ended.');
+        };
+
+        recognition.start();
+    }
+
+    // Accordion functionality
+    const accordionButtons = document.querySelectorAll('.accordion-button');
+
+    accordionButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const content = button.nextElementSibling;
+            const icon = button.querySelector('i');
+
+            // Close all other accordions
+            document.querySelectorAll('.accordion-content').forEach(acc => {
+                if (acc !== content) {
+                    acc.style.maxHeight = null;
+                    acc.classList.remove('open');
+                    acc.previousElementSibling.querySelector('i').classList.remove('fa-chevron-up');
+                    acc.previousElementSibling.querySelector('i').classList.add('fa-chevron-down');
+                }
+            });
+
+            // Toggle content visibility with smooth animation
+            if (content.style.maxHeight) {
+                content.style.maxHeight = null;
+                content.classList.remove('open');
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+                content.classList.add('open');
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            }
+        });
+    });
+</script>
+
+<style>
+    .main-container {
+        display: flex;
+        gap: 40px;
+        justify-content: center;
+        align-items: flex-start;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+    .form-container, .results-container {
+        border-radius: 18px;
+        box-shadow: 0 6px 24px rgba(64,152,215,0.08);
+        background: #f8fbff;
+        padding: 32px 28px;
+        min-width: 320px;
+        max-width: 600px;
+        width: 100%;
+    }
+    .custom-card {
+        border-radius: 16px;
+        box-shadow: 0 4px 16px rgba(64,152,215,0.10);
+        background: #fff;
+        margin-bottom: 32px;
+        padding: 24px 20px;
+        transition: box-shadow 0.3s, transform 0.3s;
+    }
+    .custom-card:hover {
+        box-shadow: 0 8px 32px rgba(64,152,215,0.18);
+        transform: translateY(-4px) scale(1.01);
+    }
+    .accordion-item {
+        margin-bottom: 14px;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(64,152,215,0.06);
+        background: #f4faff;
+        transition: box-shadow 0.3s;
+    }
+    .accordion-item:last-child {
+        margin-bottom: 0;
+    }
+    .accordion-button {
+        background: #e3f2fd !important;
+        color: #4098d7 !important;
+        font-weight: 600;
+        border-radius: 10px !important;
+        box-shadow: none !important;
+        border: none !important;
+        margin-bottom: 0 !important;
+        padding: 14px 22px !important;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+        font-size: 1.08em;
+        letter-spacing: 0.01em;
+        cursor: pointer;
+        outline: none;
+        border-bottom: 1px solid #d0e7fa;
+        position: relative;
+        z-index: 2;
+    }
+    .accordion-button:hover, .accordion-button:focus {
+        background: #d0e7fa !important;
+        color: #3078b1 !important;
+        box-shadow: 0 2px 8px rgba(64,152,215,0.10);
+    }
+    .accordion-button i {
+        transition: transform 0.3s, color 0.3s;
+        margin-left: 12px;
+        font-size: 1.2em;
+        color: #4098d7;
+    }
+    .accordion-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s;
+        padding: 0 22px;
+        background: #f9fbfd;
+        border-radius: 0 0 10px 10px;
+        margin-top: 0;
+        border: none;
+        font-size: 15.5px;
+        color: #333;
+        box-shadow: none;
+        position: relative;
+        z-index: 1;
+    }
+    .accordion-content.open {
+        border-top: 1px solid #e3eaf5;
+        box-shadow: 0 2px 8px rgba(64,152,215,0.08);
+        background: #f4faff;
+        padding-top: 12px;
+        padding-bottom: 16px;
+    }
+    .accordion-content ul {
+        padding-left: 18px;
+        margin: 0;
+    }
+    .button-grid {
+        gap: 14px;
+        margin-top: 14px;
+    }
+    @media (max-width: 900px) {
+        .main-container {
+            flex-direction: column;
+            gap: 30px;
+        }
+        .form-container, .results-container {
+            max-width: 100%;
+        }
+    }
+    @media (max-width: 600px) {
+        .form-container, .results-container {
+            padding: 18px 6px;
+            min-width: unset;
+        }
+        .custom-card {
+            padding: 14px 6px;
+        }
+    }
+</style>
+{% endblock %}

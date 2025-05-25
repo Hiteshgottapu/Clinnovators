@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block title %}Mediscript - Medicine Search{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        /* Soft gradient background */
+        background: linear-gradient(120deg, #e3f1fc 0%, #f6fafd 100%);
+        min-height: 100vh;
+    }
+    .container {
+        max-width: 720px;
+        margin: 3.5rem auto 2rem auto;
+        background: #fff;
+        border-radius: 24px;
+        box-shadow: 0 8px 36px rgba(64,152,215,0.14), 0 2px 8px rgba(64,152,215,0.09);
+        padding: 2.8rem 2.2rem 2.2rem 2.2rem;
+        position: relative;
+        z-index: 2;
+        transition: box-shadow 0.2s;
+    }
+    .container:hover {
+        box-shadow: 0 18px 56px rgba(64,152,215,0.19), 0 4px 16px rgba(64,152,215,0.13);
+    }
+    .pharma-branding h1 {
+        font-family: 'Segoe UI', 'Arial', sans-serif;
+        font-size: 2.5rem;
+        color: #3078b1;
+        letter-spacing: 1.5px;
+        margin-bottom: 0.2rem;
+        text-shadow: 0 2px 12px #e3f1fc;
+    }
+    .data-source {
+        font-size: 1.09rem;
+        color: #7fa7c7;
+        margin-bottom: 1.7rem;
+    }
+    .section-header h2 {
+        font-size: 1.55rem;
+        margin-bottom: 0.2rem;
+        letter-spacing: 0.2px;
+    }
+    .search-container {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        margin-bottom: 1.7rem;
+        background: #f1f7fb;
+        border-radius: 14px;
+        padding: 0.9rem 1.3rem;
+        box-shadow: 0 2px 12px rgba(64,152,215,0.07);
+        position: sticky;
+        top: 0.5rem;
+        z-index: 10;
+    }
+    .search-input {
+        flex: 1;
+        border: none;
+        outline: none;
+        font-size: 1.15rem;
+        background: transparent;
+        padding: 0.7rem 0;
+        color: #3078b1;
+        border-radius: 8px;
+        transition: box-shadow 0.18s, background 0.18s;
+    }
+    .search-input:focus {
+        background: #e3f1fc;
+        box-shadow: 0 0 0 3px #4098d7;
+        outline: none;
+    }
+    .search-input::placeholder {
+        color: #b0cbe6;
+        font-style: italic;
+        opacity: 1;
+    }
+    .search-btn {
+        background: linear-gradient(90deg, #4098d7 60%, #3078b1 100%);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 0.6rem 1.3rem;
+        font-size: 1.18rem;
+        cursor: pointer;
+        transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+        box-shadow: 0 2px 8px rgba(64,152,215,0.10);
+        font-weight: 500;
+        outline: none;
+    }
+    .search-btn:focus-visible {
+        box-shadow: 0 0 0 3px #1abc9c, 0 4px 16px rgba(64,152,215,0.13);
+    }
+    .search-btn:hover {
+        background: linear-gradient(90deg, #3078b1 60%, #4098d7 100%);
+        box-shadow: 0 4px 16px rgba(64,152,215,0.13);
+        transform: translateY(-2px) scale(1.04);
+    }
+    .results-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 0.8rem;
+        background: none;
+    }
+    .results-table th, .results-table td {
+        padding: 1.1rem 1.2rem;
+        text-align: left;
+    }
+    .results-table th {
+        background: #f1f7fb;
+        color: #3078b1;
+        font-weight: 700;
+        border-radius: 12px 12px 0 0;
+        font-size: 1.11rem;
+        border-bottom: 2px solid #e3f1fc;
+        letter-spacing: 0.5px;
+        text-shadow: 0 1px 0 #fff;
+    }
+    .results-table tr {
+        transition: box-shadow 0.18s, background 0.18s;
+        animation: rowFadeIn 0.6s;
+    }
+    @keyframes rowFadeIn {
+        from { opacity: 0; transform: translateY(20px);}
+        to { opacity: 1; transform: translateY(0);}
+    }
+    .results-table tbody tr:not(.empty-state):hover {
+        background: #e3f1fc;
+        box-shadow: 0 2px 16px rgba(64,152,215,0.10);
+        cursor: pointer;
+    }
+    .results-table td {
+        background: #fff;
+        border-radius: 0 0 12px 12px;
+        font-size: 1.12rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f7fb;
+    }
+    .results-table td:first-child {
+        border-left: 3px solid #4098d7;
+    }
+    .results-table td:last-child {
+        text-align: right;
+    }
+    .price-cell {
+        color: #1abc9c;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        font-size: 1.15em;
+    }
+    .empty-state {
+        background: none !important;
+    }
+    .loading-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(255,255,255,0.85);
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0;
+        animation: fadeIn 0.3s;
+    }
+    .spinner {
+        width: 54px;
+        height: 54px;
+        border: 7px solid #e3f1fc;
+        border-top: 7px solid #4098d7;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 0.7rem;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    /* Animations for fade-in and slide-in */
+    .fade-in {
+        animation: fadeIn 0.7s;
+    }
+    .slide-in {
+        animation: slideIn 0.7s;
+    }
+    @keyframes slideIn {
+        from { transform: translateY(30px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    /* Responsive tweaks */
+    @media (max-width: 800px) {
+        .container { max-width: 99vw; padding: 1.2rem 0.5rem; }
+        .results-table th, .results-table td { padding: 0.7rem 0.5rem; }
+        .pharma-branding h1 { font-size: 1.5rem; }
+        .section-header h2 { font-size: 1.1rem; }
+    }
+</style>
+<div class="container">
+    <div class="pharma-branding">
+        <h1 class="fade-in">MedPrice Pro</h1>
+        <p class="data-source fade-in">Real-time Pharmaceutical Pricing Data</p>
+    </div>
+
+    <div class="section-header fade-in" style="margin-bottom: 2rem;">
+        <h2 style="color: #4098d7; font-weight: 600; margin-bottom: 0.5rem;">Compare Medicine Prices Instantly</h2>
+        <p style="color: #555; font-size: 1.1rem; margin: 0;">Find the best deals from top pharmacies in seconds.</p>
+    </div>
+
+    <div class="search-container slide-in">
+        <input type="text" class="search-input" placeholder="Enter drug name..." id="medicineName" onkeypress="if(event.key === 'Enter') searchMedicine()">
+        <button class="search-btn" onclick="searchMedicine()">
+            <span>&#128269;</span>
+        </button>
+    </div>
+
+    <table class="results-table fade-in" style="margin-top: 2.5rem;">
+        <thead>
+            <tr>
+                <th>Pharmacy</th>
+                <th>Medicine Name</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody id="resultsBody">
+            <tr class="empty-state">
+                <td colspan="3" style="text-align:center; color:#888; font-style:italic;">
+                    Enter a medicine name to compare prices
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="spinner"></div>
+        <div style="margin-top: 1rem; color: #4098d7; font-weight: 500;">Fetching latest prices...</div>
+    </div>
+</div>
+
+<script>
+    async function searchMedicine() {
+        const medicineName = document.getElementById("medicineName").value.trim();
+        const resultsBody = document.getElementById("resultsBody");
+        const loadingOverlay = document.getElementById("loadingOverlay");
+
+        if (!medicineName) {
+            alert("Please enter a medicine name");
+            return;
+        }
+
+        loadingOverlay.style.display = 'flex';
+
+        try {
+            const response = await fetch(`/medicine-search?name=${encodeURIComponent(medicineName)}`);
+            const data = await response.json();
+
+            resultsBody.innerHTML = '';
+
+            if (!response.ok) {
+                resultsBody.innerHTML = `
+                    <tr class="empty-state">
+                        <td colspan="3" style="text-align:center; color:#e74c3c; font-style:italic;">
+                            ${data.error || data.message || "An error occurred."}
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            if (data.length === 0) {
+                resultsBody.innerHTML = `
+                    <tr class="empty-state">
+                        <td colspan="3" style="text-align:center; color:#888; font-style:italic;">
+                            No results found for "<span style='color:#4098d7;'>${medicineName}</span>"
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            data.forEach(item => {
+                const row = document.createElement("tr");
+                row.classList.add("fade-in");
+                row.innerHTML = `
+                    <td style="font-weight:500; color:#3078b1;">${item.pharmacy}</td>
+                    <td>${item.name}</td>
+                    <td class="price-cell" style="font-size:1.1em;">${item.price}</td>
+                `;
+                resultsBody.appendChild(row);
+            });
+        } catch (error) {
+            resultsBody.innerHTML = `
+                <tr class="empty-state">
+                    <td colspan="3" style="text-align:center; color:#e74c3c; font-style:italic;">
+                        Error fetching data. Please try again later.
+                    </td>
+                </tr>
+            `;
+        } finally {
+            loadingOverlay.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

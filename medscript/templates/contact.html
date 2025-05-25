@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Cinovates - Contact{% endblock %}
+
+{% block content %}
+<div class="contact-container">
+    <h1>Contact Us</h1>
+    <p>We'd love to hear from you! Please fill out the form below to get in touch.</p>
+    <div class="contact-form">
+        <form id="contactForm" action="/send_message" method="POST">
+            <input type="text" name="name" placeholder="Your Name" required>
+            <textarea name="message" rows="5" placeholder="Your Message" required></textarea>
+            <button type="submit">✉️ Send Message</button>
+        </form>
+    </div>
+</div>
+<script>
+    document.getElementById('contactForm').addEventListener('submit', function (event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        // Get form data
+        const formData = new FormData(this);
+
+        // Send data to the server
+        fetch('/send_message', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Message sent successfully!');
+            } else {
+                alert('Failed to send message. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    });
+</script>
+{% endblock %}

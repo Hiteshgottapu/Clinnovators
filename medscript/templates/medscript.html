@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}Mediscript - Upload Your Prescription{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>Med Script's <span>Prescriptions</span> Recognition</h1>
+    <p>MedScript uses advanced image processing to digitize prescriptions, making medical data management seamless. Its AI-powered assistant provides precise, empathetic responses to your health inquiries.</p>
+</div>
+
+<div class="upload-container" id="upload-container">
+    <label for="file-upload" class="upload-icon">
+        <div class="circle-animation">
+            <img src="{{ url_for('static', filename='image.png') }}" alt="Upload">
+        </div>
+    </label>
+    <p>Upload the Prescription to see the Magic</p>
+
+    <h1 style="font-size: 24px; color: var(--primary-color); margin-top: 20px;">Drop your prescription here</h1>
+    <p style="font-size: 16px; color: var(--secondary-color);">Supports: JPG, PNG, PDF</p>
+
+    <div id="image-preview" style="display: none;">
+        <h2>Image Preview</h2>
+        <img id="preview" src="" alt="Image Preview" style="width: 250px; height: 250px; object-fit: cover;">
+    </div>
+
+    <form action="/medscript" method="POST" enctype="multipart/form-data" id="upload-form">
+        <input type="file" name="image" id="file-upload" accept="image/*,application/pdf" required onchange="previewImage(event)" style="font-size: 50px;">
+        <input type="submit" value="Process Prescription" style="width: 200px; padding: 10px;">
+    </form> 
+    <br>
+
+    {% if text %}
+    <div class="extracted-text-container" style="position: relative; width: 100%; max-width: 600px; margin: 0 auto;">
+        <h2>Extracted Prescription</h2>
+        <div style="position: relative; display: inline-block; width: calc(100% - 20px); margin: 0 10px;">
+            <textarea id="extracted-text" readonly style="
+                width: 100%;
+                height: 250px;
+                padding: 40px 10px 10px 10px;
+                box-sizing: border-box;
+                font-size: 18px;
+                resize: vertical;
+            ">{{ text.replace('\n', '\r\n') }}</textarea>
+
+            <div class="text-actions" style="
+                position: absolute;
+                top: 10px;
+                right: 15px;
+                background: rgba(255, 255, 255, 0.8);
+                padding: 5px 8px;
+                border-radius: 5px;
+                display: flex;
+                gap: 10px;
+            ">
+                <a href="{{ url_for('download_pdf') }}?text={{ text|urlencode }}" style="color: gray;">
+                    <i class="fas fa-download"></i>
+                </a>
+                <button onclick="copyText()" style="color: gray; background: none; border: none; cursor: pointer;">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+            <div style="display: flex; justify-content: center; margin-top: 20px;">
+                <button onclick="analyzeText()" style="
+                    background-color: #007bff;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    font-size: 16px;
+                    cursor: pointer;
+                    border-radius: 5px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 5px;
+                ">
+                    Analyze Prescription
+                    <i class="fas fa-chart-line"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    {% if medicines %}
+    <div class="medications-container" style="width: 100%; max-width: 800px; margin: 30px auto;">
+        <h2>Your Medications</h2>
+        
+        {% for medicine in medicines %}
+        <div class="medication-card" style="
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        ">
+            <div class="medication-header" style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 15px 20px;
+                background: #f9f9f9;
+                cursor: pointer;
+            " onclick="toggleMedicationDetails(this)">
+                <div class="medication-name">
+                    <h3 style="margin: 0; color: #2c3e50; font-size: 18px;">{{ medicine.name }}</h3>
+                    <p style="margin: 5px 0 0; color: #7f8c8d; font-size: 14px;">
+                        {{ medicine.concentration }} • {{ medicine.dosage }}
+                    </p>
+                </div>
+                <div class="refill-info" style="display: flex; align-items: center;">
+                    <span class="refill-count" style="color: #3498db; margin-right: 15px; font-weight: 500;">
+                        {% if loop.index == 1 %}2 refills{% endif %}
+                        {% if loop.index == 2 %}3 refills{% endif %}
+                        {% if loop.index == 3 %}5 refills{% endif %}
+                    </span>
+                    <i class="fas fa-chevron-down toggle-icon" style="color: #7f8c8d; transition: transform 0.3s;"></i>
+                </div>
+            </div>
+            
+            <div class="medication-details" style="
+                padding: 0 20px;
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease-out;
+            ">
+                <div class="detail-section" style="margin-bottom: 15px; padding-top: 20px;">
+                    <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 15px;">Prescribed By</h4>
+                    <p style="margin: 0; color: #34495e; font-size: 14px;">Dr. Sarah Johnson</p>
+                </div>
+                
+                <div class="detail-section" style="margin-bottom: 15px;">
+                    <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 15px;">Instructions</h4>
+                    <p style="margin: 0; color: #34495e; font-size: 14px;">
+                        {% if medicine.name == 'Lisinopril' %}
+                        Take in the morning with or without food.
+                        {% elif medicine.name == 'Atorvastatin' %}
+                        Take in the evening with or without food.
+                        {% elif medicine.name == 'Metformin' %}
+                        Take with meals to reduce stomach upset.
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div class="detail-section" style="margin-bottom: 15px;">
+                    <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 15px;">Purpose</h4>
+                    <p style="margin: 0; color: #34495e; font-size: 14px;">
+                        {% if medicine.name == 'Lisinopril' %}
+                        Treatment for high blood pressure and heart failure
+                        {% elif medicine.name == 'Atorvastatin' %}
+                        Lowers cholesterol and reduces risk of heart disease
+                        {% elif medicine.name == 'Metformin' %}
+                        Treatment for type 2 diabetes
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div class="detail-section" style="margin-bottom: 15px;">
+                    <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 15px;">Possible Side Effects</h4>
+                    <ul style="margin: 0; color: #34495e; font-size: 14px; padding-left: 20px;">
+                        {% if medicine.name == 'Lisinopril' %}
+                        <li>Dizziness</li>
+                        <li>Headache</li>
+                        <li>Dry cough</li>
+                        {% elif medicine.name == 'Atorvastatin' %}
+                        <li>Muscle pain</li>
+                        <li>Digestive problems</li>
+                        <li>Liver enzyme abnormalities</li>
+                        {% elif medicine.name == 'Metformin' %}
+                        <li>Nausea</li>
+                        <li>Diarrhea</li>
+                        <li>Stomach upset</li>
+                        {% endif %}
+                    </ul>
+                </div>
+                
+                <button class="refill-btn" style="
+                    background: #f8f9fa;
+                    border: 1px solid #e0e0e0;
+                    padding: 8px 15px;
+                    border-radius: 5px;
+                    margin: 10px 0 20px;
+                    cursor: pointer;
+                    color: #3498db;
+                    font-weight: 500;
+                ">
+                    Request Refill
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div style="text-align: center; margin-top: 20px;">
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function previewImage(event) {
+        const preview = document.getElementById('preview');
+        const imagePreview = document.getElementById('image-preview');
+        const file = event.target.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function() {
+            preview.src = reader.result;
+            imagePreview.style.display = 'block';
+        };
+
+        if (file) {
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function copyText() {
+        const textArea = document.getElementById('extracted-text');
+        textArea.select();
+        document.execCommand('copy');
+        alert('Text copied to clipboard');
+    }
+
+    function toggleMedicationDetails(header) {
+        const card = header.parentElement;
+        const details = card.querySelector('.medication-details');
+        const icon = card.querySelector('.toggle-icon');
+        
+        if (details.style.maxHeight) {
+            details.style.maxHeight = null;
+            details.style.padding = '0 20px';
+            icon.style.transform = 'rotate(0deg)';
+        } else {
+            details.style.maxHeight = details.scrollHeight + 'px';
+            details.style.padding = '0 20px 20px';
+            icon.style.transform = 'rotate(180deg)';
+        }
+    }
+
+    function analyzeText() {
+        const text = document.getElementById("extracted-text").value;
+        if (!text.trim()) {
+            alert("No text to analyze. Please upload a valid prescription.");
+            return;
+        }
+
+        try {
+            const chatbotWindow = window.open("/chatbot", "_blank");
+            chatbotWindow.onload = () => {
+                const chatbotInput = chatbotWindow.document.getElementById("user-question");
+                const chatbotForm = chatbotWindow.document.getElementById("chatbot-form");
+
+                if (chatbotInput && chatbotForm) {
+                    chatbotInput.value = text;
+                    chatbotForm.dispatchEvent(new Event("submit"));
+                    alert("Prescription data transferred to the chatbot.");
+                } else {
+                    alert("Chatbot input field not found. Please ensure the chatbot page is open.");
+                }
+            };
+        } catch (error) {
+            console.error("Error transferring data to chatbot:", error);
+            alert("Failed to transfer prescription data to the chatbot.");
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const uploadContainer = document.getElementById('upload-container');
+        const fileUpload = document.getElementById('file-upload');
+        const uploadForm = document.getElementById('upload-form');
+
+        uploadContainer.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            uploadContainer.classList.add('drag-over');
+        });
+
+        uploadContainer.addEventListener('dragleave', () => {
+            uploadContainer.classList.remove('drag-over');
+        });
+
+        uploadContainer.addEventListener('drop', (event) => {
+            event.preventDefault();
+            uploadContainer.classList.remove('drag-over');
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                fileUpload.files = files;
+                previewImage({ target: { files: files } });
+            }
+        });
+    });
+</script>
+
+<style>
+    .medication-card:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .refill-btn:hover {
+        background: #e9ecef !important;
+    }
+    
+    .medication-header:hover {
+        background: #f0f0f0 !important;
+    }
+</style>
+{% endblock %}
