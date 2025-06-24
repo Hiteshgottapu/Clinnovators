@@ -69,4 +69,4 @@ This project is for educational purposes.
 **Developed by:**  
 - Hitesh Gottapu  
 - Jaswanth Kollipara  
-See [developers page](developers.html) for more info.
+See [developers page](https://clinnovators.onrender.com/developers) for more info.
